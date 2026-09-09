@@ -1,0 +1,1 @@
+ALTER TABLE "settings" ADD COLUMN "meezan_account_number" varchar(60);
