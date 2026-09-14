@@ -59,10 +59,10 @@ export default async function HomePage() {
 
             <div className="overflow-hidden rounded-3xl border border-forest-900/10 bg-white shadow-xl">
               <Image
-                src="/images/product-placeholder.png" /* Ensure filename & extension match your folder */
-                alt="Veloura Naturals Hair Oil"
-                width={500}
-                height={500}
+                src={product?.images?.[0] || '/images/product-placeholder-1.jpg'}
+                alt={product?.name || 'Veloura Naturals Hair Oil'}
+                width={800}
+                height={600}
                 className="h-full w-full object-cover"
                 priority
               />
