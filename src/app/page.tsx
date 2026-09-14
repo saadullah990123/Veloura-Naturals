@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Typewriter from '@/components/typewriter';
 import StarRating from '@/components/star-rating';
-import ReviewModal from '@/components/review-modal';
+import ReviewsSection from '@/components/reviews-section';
 import { getActiveProduct, getApprovedReviews, getReviewStats } from '@/lib/data';
 import { formatPKR } from '@/lib/utils';
 
@@ -109,36 +109,7 @@ export default async function HomePage() {
       )}
 
       {/* --------------------------------------------------------- REVIEWS */}
-      <section className="container-x py-20">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <span className="section-label">Social Proof</span>
-            <h2 className="mt-2 font-display text-3xl font-semibold text-ink">
-              What customers are saying
-            </h2>
-          </div>
-          <ReviewModal />
-        </div>
-
-        {reviews.length === 0 ? (
-          <p className="mt-8 text-ink/50">Be the first to leave a review.</p>
-        ) : (
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {reviews.map((r) => (
-              <div key={r.id} className="rounded-2xl border border-forest-900/10 p-6">
-                <StarRating rating={r.rating} size={16} />
-                {r.title && (
-                  <h4 className="mt-3 font-semibold text-ink">{r.title}</h4>
-                )}
-                {r.body && <p className="mt-2 text-sm text-ink/60">{r.body}</p>}
-                <p className="mt-4 text-xs font-medium text-ink/40">
-                  — {r.customerName}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      <ReviewsSection initialReviews={reviews} />
     </>
   );
 }
