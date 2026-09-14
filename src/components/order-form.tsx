@@ -47,17 +47,24 @@ export default function OrderForm({
     setErrorMsg('');
 
     const form = new FormData(e.currentTarget);
+    const customerName = form.get('customerName')?.toString().trim();
+    const phone = form.get('phone')?.toString().trim();
+    const email = form.get('email')?.toString().trim() || undefined;
+    const address = form.get('address')?.toString().trim();
+    const city = form.get('city')?.toString().trim() || undefined;
+    const customerNotes = form.get('customerNotes')?.toString().trim() || undefined;
+
     const payload = {
-      customerName: form.get('customerName'),
-      phone: form.get('phone'),
-      email: form.get('email'),
-      address: form.get('address'),
-      city: form.get('city'),
+      customerName,
+      phone,
+      email,
+      address,
+      city,
       productId,
       quantity,
       paymentMethod,
-      transactionId: paymentMethod === 'easypaisa' ? transactionId : undefined,
-      customerNotes: form.get('customerNotes'),
+      transactionId: paymentMethod === 'easypaisa' ? (transactionId.trim() || undefined) : undefined,
+      customerNotes,
     };
 
     try {
@@ -131,9 +138,19 @@ export default function OrderForm({
           <input
             name="city"
             className="w-full rounded-lg border border-ink/15 px-3.5 py-2.5 text-sm outline-none focus:border-forest-500"
-            placeholder="e.g. Lahore"
+            placeholder="e.g. Rawalpindi"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="mb-1.5 block text-xs font-medium text-ink/60">Email Address (optional)</label>
+        <input
+          name="email"
+          type="email"
+          className="w-full rounded-lg border border-ink/15 px-3.5 py-2.5 text-sm outline-none focus:border-forest-500"
+          placeholder="name@example.com (for order receipt)"
+        />
       </div>
 
       <div>

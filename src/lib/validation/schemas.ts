@@ -12,25 +12,31 @@ export const createOrderSchema = z.object({
     .string()
     .trim()
     .regex(/^[0-9+\-\s()]{7,20}$/, 'Enter a valid phone number'),
-  email: z.string().trim().email().optional().or(z.literal('')),
+  email: z
+    .string()
+    .trim()
+    .email('Please enter a valid email address')
+    .nullish()
+    .or(z.literal(''))
+    .optional(),
   address: z.string().trim().min(5, 'Delivery address is required').max(500),
-  city: z.string().trim().max(100).optional().or(z.literal('')),
+  city: z.string().trim().max(100).nullish().or(z.literal('')).optional(),
 
-  productId: z.coerce.number().int().positive(),
+  productId: z.coerce.number().int().positive('Valid product is required'),
   quantity: z.coerce.number().int().positive().max(20),
 
   paymentMethod: z.enum(['cod', 'meezan_bank', 'easypaisa']),
-  transactionId: z.string().trim().max(100).optional().or(z.literal('')),
-  paymentProofUrl: z.string().trim().url().optional().or(z.literal('')),
+  transactionId: z.string().trim().max(100).nullish().or(z.literal('')).optional(),
+  paymentProofUrl: z.string().trim().url().nullish().or(z.literal('')).optional(),
 
-  customerNotes: z.string().trim().max(500).optional().or(z.literal('')),
+  customerNotes: z.string().trim().max(500).nullish().or(z.literal('')).optional(),
 });
 
 export const updateOrderStatusSchema = z.object({
   status: z.enum(['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']),
-  trackingNumber: z.string().trim().max(100).optional(),
-  courier: z.string().trim().max(100).optional(),
-  adminNotes: z.string().trim().max(1000).optional(),
+  trackingNumber: z.string().trim().max(100).nullish().or(z.literal('')).optional(),
+  courier: z.string().trim().max(100).nullish().or(z.literal('')).optional(),
+  adminNotes: z.string().trim().max(1000).nullish().or(z.literal('')).optional(),
 });
 
 export const updatePaymentStatusSchema = z.object({

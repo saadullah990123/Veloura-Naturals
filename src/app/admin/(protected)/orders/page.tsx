@@ -19,6 +19,15 @@ interface Order {
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
+const STATUS_LABELS: Record<string, string> = {
+  all: 'All',
+  pending: 'Pending',
+  confirmed: 'Confirmed (Packed)',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+};
+
 const STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700',
   confirmed: 'bg-blue-100 text-blue-700',
@@ -77,7 +86,7 @@ export default function AdminOrdersPage() {
               filter === s ? 'bg-forest-600 text-white' : 'bg-white text-ink/60 hover:bg-forest-50'
             }`}
           >
-            {s}
+            {STATUS_LABELS[s] || s}
           </button>
         ))}
       </div>
@@ -115,7 +124,7 @@ export default function AdminOrdersPage() {
                   className={`rounded-full border-0 px-3 py-1 text-xs font-semibold capitalize ${STATUS_COLORS[o.status]}`}
                 >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
                   ))}
                 </select>
                 <Link href={`/admin/orders/${o.id}`} className="text-sm font-medium text-forest-600">
@@ -164,7 +173,7 @@ export default function AdminOrdersPage() {
                     className={`rounded-full border-0 px-3 py-1 text-xs font-semibold capitalize ${STATUS_COLORS[o.status]}`}
                   >
                     {STATUS_OPTIONS.map((s) => (
-                      <option key={s} value={s}>{s}</option>
+                      <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
                     ))}
                   </select>
                 </td>

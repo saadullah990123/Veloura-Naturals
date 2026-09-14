@@ -32,6 +32,13 @@ interface OrderDetail {
 }
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+const STATUS_LABELS: Record<string, string> = {
+  pending: 'Pending',
+  confirmed: 'Confirmed (Packed)',
+  shipped: 'Shipped',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled',
+};
 const PAYMENT_STATUS_OPTIONS = ['unpaid', 'pending_verification', 'verified', 'failed'];
 
 export default function AdminOrderDetailPage() {
@@ -176,7 +183,7 @@ export default function AdminOrderDetailPage() {
                   className="w-full rounded-lg border border-ink/15 px-3 py-2 text-sm capitalize"
                 >
                   {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>{s}</option>
+                    <option key={s} value={s}>{STATUS_LABELS[s] || s}</option>
                   ))}
                 </select>
               </div>

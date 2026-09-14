@@ -69,9 +69,9 @@ export async function PATCH(req: Request, { params }: Params) {
     .update(orders)
     .set({
       status: parsed.data.status,
-      trackingNumber: parsed.data.trackingNumber,
-      courier: parsed.data.courier,
-      adminNotes: parsed.data.adminNotes,
+      ...(parsed.data.trackingNumber !== undefined && { trackingNumber: parsed.data.trackingNumber }),
+      ...(parsed.data.courier !== undefined && { courier: parsed.data.courier }),
+      ...(parsed.data.adminNotes !== undefined && { adminNotes: parsed.data.adminNotes }),
       updatedAt: new Date(),
     })
     .where(eq(orders.id, id))
