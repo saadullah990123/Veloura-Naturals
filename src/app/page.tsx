@@ -59,7 +59,7 @@ export default async function HomePage() {
 
             <div className="overflow-hidden rounded-3xl border border-forest-900/10 bg-white shadow-xl">
               <Image
-                src={product?.images?.[0] || '/images/product-placeholder-1.jpg'}
+                src={product?.images?.[0] || '/images/product-placeholder-2.png'}
                 alt={product?.name || 'Veloura Naturals Hair Oil'}
                 width={800}
                 height={600}
