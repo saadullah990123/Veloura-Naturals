@@ -44,8 +44,7 @@ export default async function ProductPage() {
       </div>
     );
   }
-
-  const images = product.images.length > 0 ? product.images : ['/images/product-placeholder-1.jpg'];
+  const images = product.images.length > 0 ? product.images : ['/images/product-placeholder-2.png'];
 
   return (
     <div className="container-x py-14">
