@@ -44,7 +44,7 @@ export default async function ProductPage() {
       </div>
     );
   }
-  const images = product.images.length > 0 ? product.images : ['/images/product-placeholder-2.png'];
+  const images = ['/images/product placeholder-2.png'];
   return (
     <div className="container-x py-14">
       <div className="grid gap-12 lg:grid-cols-2">
