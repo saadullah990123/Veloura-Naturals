@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import StarRating from '@/components/star-rating';
-import ReviewModal, { SubmittedReview } from '@/components/review-modal';
+import ReviewModal from '@/components/review-modal';
 import ReviewLightbox from '@/components/review-lightbox';
 
 export interface BaseReview {
@@ -15,7 +15,6 @@ export interface BaseReview {
   images?: string[] | null;
   status?: string;
   createdAt?: string | Date | null;
-  isLocal?: boolean;
 }
 
 interface ReviewsSectionProps {
@@ -24,7 +23,7 @@ interface ReviewsSectionProps {
 
 const LOCAL_STORAGE_KEY = 'veloura_customer_reviews_v1';
 
-// Initial sample customer photos to enrich starter reviews out-of-the-box
+// Starter review photos
 const SAMPLE_REVIEW_PHOTOS: Record<string, string[]> = {
   'Ayesha K.': ['/images/reviews/review-sample-1.jpg'],
   'Bilal R.': ['/images/reviews/review-sample-2.jpg'],
@@ -32,15 +31,17 @@ const SAMPLE_REVIEW_PHOTOS: Record<string, string[]> = {
 };
 
 export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) {
-  const [reviews, setReviews] = useState<BaseReview[]>(() => {
-    // Attach default preview photos to starter reviews if none present
-    return initialReviews.map((r) => {
-      const defaultPhotos = SAMPLE_REVIEW_PHOTOS[r.customerName];
-      return {
-        ...r,
-        images: r.images && r.images.length > 0 ? r.images : defaultPhotos || [],
-      };
-    });
+  // Storefront displays ONLY approved reviews fetched from the server/database
+  const [reviews] = useState<BaseReview[]>(() => {
+    return initialReviews
+      .filter((r) => r.status === 'approved' || !r.status)
+      .map((r) => {
+        const defaultPhotos = SAMPLE_REVIEW_PHOTOS[r.customerName];
+        return {
+          ...r,
+          images: r.images && r.images.length > 0 ? r.images : defaultPhotos || [],
+        };
+      });
   });
 
   const [lightboxState, setLightboxState] = useState<{
@@ -50,53 +51,16 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
     reviewTitle?: string;
   } | null>(null);
 
-  const [recentNotification, setRecentNotification] = useState<string | null>(null);
-
-  // Load persisted reviews from localStorage on client mount
+  // Clear any legacy unapproved reviews stored locally from earlier testing
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
-        const parsed: BaseReview[] = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setReviews((prev) => {
-            // Keep local reviews at the front, deduplicate by ID
-            const existingIds = new Set(parsed.map((p) => String(p.id)));
-            const nonDuplicates = prev.filter((p) => !existingIds.has(String(p.id)));
-            return [...parsed, ...nonDuplicates];
-          });
-        }
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(LOCAL_STORAGE_KEY);
       }
-    } catch (e) {
-      console.warn('Failed to parse reviews from localStorage:', e);
+    } catch {
+      // Ignore
     }
   }, []);
-
-  function handleNewReview(newReview: SubmittedReview) {
-    const formattedReview: BaseReview = {
-      ...newReview,
-      isLocal: true,
-    };
-
-    setReviews((prev) => {
-      const updated = [formattedReview, ...prev];
-      // Save locally submitted reviews to localStorage
-      try {
-        const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-        const currentLocals: BaseReview[] = stored ? JSON.parse(stored) : [];
-        const newLocals = [formattedReview, ...currentLocals.filter((l) => l.id !== formattedReview.id)];
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLocals));
-      } catch (e) {
-        console.warn('Failed to save review to localStorage:', e);
-      }
-      return updated;
-    });
-
-    setRecentNotification(`Thanks ${formattedReview.customerName}! Your review was added live.`);
-    setTimeout(() => {
-      setRecentNotification(null);
-    }, 6000);
-  }
 
   function openImagePreview(
     images: string[],
@@ -112,7 +76,7 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
     });
   }
 
-  // Aggregate stats
+  // Aggregate stats calculated strictly from approved reviews
   const totalCount = reviews.length;
   const avgRating =
     totalCount > 0
@@ -121,25 +85,6 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
 
   return (
     <section className="container-x py-20">
-      {/* Live notification banner */}
-      {recentNotification && (
-        <div className="mb-6 flex items-center justify-between rounded-xl bg-forest-50 border border-forest-200 px-4 py-3 text-sm text-forest-800 animate-fade-up">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-forest-600 text-xs text-white font-bold">
-              ✓
-            </span>
-            <span>{recentNotification}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setRecentNotification(null)}
-            className="text-xs text-forest-600 hover:text-forest-800 font-medium"
-          >
-            Dismiss
-          </button>
-        </div>
-      )}
-
       {/* Header section with Stats & Write a Review CTA */}
       <div className="flex flex-wrap items-end justify-between gap-6 pb-6 border-b border-forest-900/10">
         <div>
@@ -154,12 +99,12 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
             </div>
             <span className="text-ink/30">•</span>
             <span className="text-sm text-ink/60">
-              Based on {totalCount} customer reviews
+              Based on {totalCount} verified customer reviews
             </span>
           </div>
         </div>
 
-        <ReviewModal onReviewSubmitted={handleNewReview} />
+        <ReviewModal />
       </div>
 
       {/* Review Cards Grid */}
@@ -168,7 +113,7 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
           <p className="text-lg font-medium text-ink">No customer reviews yet.</p>
           <p className="mt-1 text-sm text-ink/60">Be the first to share your experience with Veloura Naturals!</p>
           <div className="mt-5">
-            <ReviewModal onReviewSubmitted={handleNewReview} />
+            <ReviewModal />
           </div>
         </div>
       ) : (
@@ -187,22 +132,13 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
             return (
               <div
                 key={r.id}
-                className={`group flex flex-col justify-between rounded-2xl border bg-white p-6 shadow-sm transition duration-200 hover:shadow-md ${
-                  r.isLocal
-                    ? 'border-forest-400/60 ring-1 ring-forest-400/30'
-                    : 'border-forest-900/10'
-                }`}
+                className="group flex flex-col justify-between rounded-2xl border bg-white p-6 shadow-sm transition duration-200 hover:shadow-md border-forest-900/10"
               >
                 <div>
                   {/* Top line: Stars & Badges */}
                   <div className="flex items-center justify-between gap-2">
                     <StarRating rating={r.rating} size={16} />
                     <div className="flex items-center gap-1.5">
-                      {r.isLocal && (
-                        <span className="rounded-full bg-forest-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-forest-700">
-                          Just added
-                        </span>
-                      )}
                       <span className="inline-flex items-center gap-1 text-[11px] font-medium text-forest-700 bg-forest-50 px-2 py-0.5 rounded-md">
                         <svg
                           className="h-3 w-3 text-forest-600"
@@ -220,7 +156,7 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
                     </div>
                   </div>
 
-                  {/* Title & Body - h3 for proper descending heading hierarchy */}
+                  {/* Title & Body */}
                   {r.title && (
                     <h3 className="mt-3 font-semibold text-ink leading-snug">
                       {r.title}
@@ -301,9 +237,7 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
                       {r.customerName}
                     </p>
                     <p className="text-[11px] text-ink/40">
-                      {r.isLocal
-                        ? 'Just now'
-                        : r.createdAt
+                      {r.createdAt
                         ? new Date(r.createdAt).toLocaleDateString('en-GB', {
                             month: 'short',
                             day: 'numeric',

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { reviews } from '@/lib/db/schema';
 import { updateReviewStatusSchema } from '@/lib/validation/schemas';
@@ -30,6 +31,12 @@ export async function PATCH(req: Request, { params }: Params) {
 
   if (!updated) return NextResponse.json({ error: 'Review not found.' }, { status: 404 });
 
+  // Instantly revalidate storefront pages and admin reviews
+  revalidatePath('/');
+  revalidatePath('/product');
+  revalidatePath('/shop');
+  revalidatePath('/admin/reviews');
+
   return NextResponse.json({ review: updated });
 }
 
@@ -41,5 +48,12 @@ export async function DELETE(_req: Request, { params }: Params) {
   if (!Number.isInteger(id)) return NextResponse.json({ error: 'Invalid review id.' }, { status: 400 });
 
   await db.delete(reviews).where(eq(reviews.id, id));
+
+  // Instantly revalidate storefront pages and admin reviews
+  revalidatePath('/');
+  revalidatePath('/product');
+  revalidatePath('/shop');
+  revalidatePath('/admin/reviews');
+
   return NextResponse.json({ success: true });
 }

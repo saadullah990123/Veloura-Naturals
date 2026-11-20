@@ -200,39 +200,22 @@ export default function ReviewModal({
     setErrorMsg('');
     setStatus('submitting');
 
-    const newReviewItem: SubmittedReview = {
-      id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      customerName: trimmedName,
-      rating,
-      title: trimmedTitle,
-      body: trimmedBody,
-      images: images.length > 0 ? [...images] : [],
-      createdAt: new Date().toISOString(),
-      status: 'approved',
-      isLocal: true,
-    };
-
     try {
-      // Send to server API with strict validation
+      // Send to server API with strict validation — saved with status: "pending"
       const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerName: newReviewItem.customerName,
-          rating: newReviewItem.rating,
-          title: newReviewItem.title,
-          body: newReviewItem.body,
+          customerName: trimmedName,
+          rating,
+          title: trimmedTitle,
+          body: trimmedBody,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error || 'Failed to submit review');
-      }
-
-      // Notify parent immediately for real-time live update
-      if (onReviewSubmitted) {
-        onReviewSubmitted(newReviewItem);
       }
 
       setStatus('done');
@@ -313,7 +296,7 @@ export default function ReviewModal({
                   Thank You for Your Review!
                 </h3>
                 <p className="mt-2 text-sm text-ink/70 max-w-sm mx-auto">
-                  Your feedback and photos have been added live to our customer reviews section.
+                  Thank you! Your review has been submitted and will appear on the site once approved by our team.
                 </p>
                 <div className="mt-6 flex justify-center">
                   <button
@@ -321,7 +304,7 @@ export default function ReviewModal({
                     onClick={resetAndClose}
                     className="btn-primary"
                   >
-                    View Live Review
+                    Close
                   </button>
                 </div>
               </div>
@@ -608,10 +591,10 @@ export default function ReviewModal({
                             d="M4 12a8 8 0 018-8v8H4z"
                           />
                         </svg>
-                        Posting…
+                        Submitting…
                       </span>
                     ) : (
-                      'Post Review'
+                      'Submit Review'
                     )}
                   </button>
                 </div>
