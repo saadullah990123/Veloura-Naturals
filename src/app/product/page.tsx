@@ -1,10 +1,10 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getActiveProduct, getApprovedReviews, getReviewStats, getSettings } from '@/lib/data';
+import { getActiveProduct, getProductBySlug, getSettings, getReviewStats } from '@/lib/data';
 import { formatPKR } from '@/lib/utils';
 import StarRating from '@/components/star-rating';
 import OrderForm from '@/components/order-form';
+import ProductGallery from '@/components/product-gallery';
 
 export const metadata: Metadata = {
   title: 'Shop Hair Growth Oil',
@@ -19,9 +19,20 @@ export const metadata: Metadata = {
 // result in overselling or a wrong charge.
 export const revalidate = 30;
 
-export default async function ProductPage() {
-  const [product, settings, stats] = await Promise.all([
-    getActiveProduct(),
+interface ProductPageProps {
+  searchParams?: { slug?: string; id?: string };
+}
+
+export default async function ProductPage({ searchParams }: ProductPageProps) {
+  let product = null;
+  if (searchParams?.slug) {
+    product = await getProductBySlug(searchParams.slug);
+  }
+  if (!product) {
+    product = await getActiveProduct();
+  }
+
+  const [settings, stats] = await Promise.all([
     getSettings(),
     getReviewStats(),
   ]);
@@ -44,35 +55,16 @@ export default async function ProductPage() {
       </div>
     );
   }
-  const rawImages = (product.images && Array.isArray(product.images) && product.images.length > 0)
+
+  const images = (product.images && Array.isArray(product.images) && product.images.length > 0)
     ? product.images
     : ['/images/product-placeholder-2.png'];
-  const images = rawImages.map((src) => src.trim().replace(/\s+/g, '-'));
+
   return (
     <div className="container-x py-14">
       <div className="grid gap-12 lg:grid-cols-2">
         {/* --------------------------------------------------------- Gallery */}
-        <div>
-          <div className="overflow-hidden rounded-2xl border border-forest-900/10 bg-forest-50">
-            <Image
-              src={images[0]}
-              alt={product.name}
-              width={800}
-              height={800}
-              className="h-full w-full object-cover"
-              priority
-            />
-          </div>
-          {images.length > 1 && (
-            <div className="mt-4 grid grid-cols-4 gap-3">
-              {images.slice(1, 5).map((src, i) => (
-                <div key={i} className="overflow-hidden rounded-xl border border-forest-900/10">
-                  <Image src={src} alt={`${product.name} ${i + 2}`} width={200} height={200} className="h-full w-full object-cover" />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductGallery images={images} productName={product.name} />
 
         {/* ---------------------------------------------------------- Info */}
         <div>

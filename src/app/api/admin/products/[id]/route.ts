@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { eq } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { products } from '@/lib/db/schema';
 import { productUpdateSchema } from '@/lib/validation/schemas';
@@ -46,7 +47,9 @@ export async function PATCH(req: Request, { params }: Params) {
   if (parsed.data.price != null) updateData.price = String(parsed.data.price);
   if (parsed.data.compareAtPrice !== undefined) {
     updateData.compareAtPrice =
-      parsed.data.compareAtPrice != null ? String(parsed.data.compareAtPrice) : null;
+      parsed.data.compareAtPrice != null && String(parsed.data.compareAtPrice).trim() !== ''
+        ? String(parsed.data.compareAtPrice)
+        : null;
   }
 
   const [updated] = await db
@@ -56,6 +59,11 @@ export async function PATCH(req: Request, { params }: Params) {
     .returning();
 
   if (!updated) return NextResponse.json({ error: 'Product not found.' }, { status: 404 });
+
+  // Instantly revalidate storefront pages and admin
+  revalidatePath('/');
+  revalidatePath('/product');
+  revalidatePath('/admin/products');
 
   return NextResponse.json({ product: updated });
 }
@@ -70,5 +78,11 @@ export async function DELETE(_req: Request, { params }: Params) {
   }
 
   await db.delete(products).where(eq(products.id, id));
+
+  // Instantly revalidate storefront pages and admin
+  revalidatePath('/');
+  revalidatePath('/product');
+  revalidatePath('/admin/products');
+
   return NextResponse.json({ success: true });
 }

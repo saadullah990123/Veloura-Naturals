@@ -220,11 +220,11 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
                     </div>
                   </div>
 
-                  {/* Title & Body */}
+                  {/* Title & Body - h3 for proper descending heading hierarchy */}
                   {r.title && (
-                    <h4 className="mt-3 font-semibold text-ink leading-snug">
+                    <h3 className="mt-3 font-semibold text-ink leading-snug">
                       {r.title}
-                    </h4>
+                    </h3>
                   )}
                   {r.body && (
                     <p className="mt-2 text-sm text-ink/75 leading-relaxed">
@@ -261,6 +261,8 @@ export default function ReviewsSection({ initialReviews }: ReviewsSectionProps) 
                             <img
                               src={imgUrl}
                               alt={`Customer photo ${imgIdx + 1}`}
+                              width={300}
+                              height={300}
                               className="h-full w-full object-cover transition duration-300 group-hover/img:scale-105"
                               loading="lazy"
                             />

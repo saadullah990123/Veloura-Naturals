@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { formatPKR } from '@/lib/utils';
 
+// Public customer-facing order result — strictly excludes internal adminNotes
 interface OrderResult {
   orderNumber: string;
   status: string;
@@ -26,15 +28,17 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function TrackOrderForm() {
-  const [orderNumber, setOrderNumber] = useState('');
+  const searchParams = useSearchParams();
+  const initialOrderNumber = searchParams.get('orderNumber') || '';
+
+  const [orderNumber, setOrderNumber] = useState(initialOrderNumber);
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [results, setResults] = useState<OrderResult[]>([]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!orderNumber && !phone) {
+  async function performSearch(num: string, ph: string) {
+    if (!num && !ph) {
       setErrorMsg('Enter your order number or phone number.');
       return;
     }
@@ -43,8 +47,8 @@ export default function TrackOrderForm() {
 
     try {
       const params = new URLSearchParams();
-      if (orderNumber) params.set('orderNumber', orderNumber);
-      if (phone) params.set('phone', phone);
+      if (num) params.set('orderNumber', num);
+      if (ph) params.set('phone', ph);
 
       const res = await fetch(`/api/track-order?${params.toString()}`);
       const data = await res.json();
@@ -67,6 +71,17 @@ export default function TrackOrderForm() {
       setErrorMsg('Network error — please try again.');
       setStatus('error');
     }
+  }
+
+  useEffect(() => {
+    if (initialOrderNumber) {
+      performSearch(initialOrderNumber, '');
+    }
+  }, [initialOrderNumber]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    performSearch(orderNumber, phone);
   }
 
   return (

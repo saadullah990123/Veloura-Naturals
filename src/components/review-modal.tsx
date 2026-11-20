@@ -80,6 +80,12 @@ export default function ReviewModal({
   const [name, setName] = useState('');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<{
+    rating?: string;
+    name?: string;
+    title?: string;
+    body?: string;
+  }>({});
   const [images, setImages] = useState<string[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -148,27 +154,58 @@ export default function ReviewModal({
     setImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   }
 
+  function handleSingleLineKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (rating === 0) {
-      setErrorMsg('Please select a star rating.');
+
+    const errors: { rating?: string; name?: string; title?: string; body?: string } = {};
+    const trimmedName = name.trim();
+    const trimmedTitle = title.trim();
+    const trimmedBody = body.trim();
+
+    if (!rating || rating < 1 || rating > 5) {
+      errors.rating = 'Please select a star rating between 1 and 5.';
+    }
+
+    if (!trimmedName) {
+      errors.name = 'Please provide your name.';
+    } else if (trimmedName.length < 2) {
+      errors.name = 'Name must be at least 2 characters.';
+    }
+
+    if (!trimmedTitle) {
+      errors.title = 'Please provide a review headline.';
+    } else if (trimmedTitle.length < 3) {
+      errors.title = 'Review headline must be at least 3 characters.';
+    }
+
+    if (!trimmedBody) {
+      errors.body = 'Please write your review.';
+    } else if (trimmedBody.length < 10) {
+      errors.body = 'Review must be at least 10 characters.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setErrorMsg('Please complete all required fields marked with an asterisk (*).');
       return;
     }
 
-    if (!name.trim()) {
-      setErrorMsg('Please provide your name.');
-      return;
-    }
-
-    setStatus('submitting');
+    setFieldErrors({});
     setErrorMsg('');
+    setStatus('submitting');
 
     const newReviewItem: SubmittedReview = {
       id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      customerName: name.trim(),
+      customerName: trimmedName,
       rating,
-      title: title.trim() || null,
-      body: body.trim() || null,
+      title: trimmedTitle,
+      body: trimmedBody,
       images: images.length > 0 ? [...images] : [],
       createdAt: new Date().toISOString(),
       status: 'approved',
@@ -176,8 +213,8 @@ export default function ReviewModal({
     };
 
     try {
-      // Background attempt to also send to server API
-      fetch('/api/reviews', {
+      // Send to server API with strict validation
+      const res = await fetch('/api/reviews', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -186,9 +223,12 @@ export default function ReviewModal({
           title: newReviewItem.title,
           body: newReviewItem.body,
         }),
-      }).catch((err) => {
-        console.warn('Server sync note:', err);
       });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        throw new Error(data?.error || 'Failed to submit review');
+      }
 
       // Notify parent immediately for real-time live update
       if (onReviewSubmitted) {
@@ -196,8 +236,9 @@ export default function ReviewModal({
       }
 
       setStatus('done');
-    } catch {
-      setErrorMsg('Something went wrong. Please try again.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setErrorMsg(msg);
       setStatus('error');
     }
   }
@@ -210,6 +251,7 @@ export default function ReviewModal({
       setName('');
       setTitle('');
       setBody('');
+      setFieldErrors({});
       setImages([]);
       setStatus('idle');
       setErrorMsg('');
@@ -284,7 +326,7 @@ export default function ReviewModal({
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={handleSubmit} noValidate>
                 {/* Header */}
                 <div className="flex items-start justify-between border-b border-ink/10 pb-4">
                   <div>
@@ -316,7 +358,10 @@ export default function ReviewModal({
                         <button
                           key={star}
                           type="button"
-                          onClick={() => setRating(star)}
+                          onClick={() => {
+                            setRating(star);
+                            setFieldErrors((prev) => ({ ...prev, rating: undefined }));
+                          }}
                           onMouseEnter={() => setHoverRating(star)}
                           onMouseLeave={() => setHoverRating(0)}
                           aria-label={`${star} star${star > 1 ? 's' : ''}`}
@@ -340,6 +385,9 @@ export default function ReviewModal({
                       {RATING_LABELS[activeStarCount] || `${activeStarCount} Stars`}
                     </span>
                   </div>
+                  {fieldErrors.rating && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.rating}</p>
+                  )}
                 </div>
 
                 {/* Name */}
@@ -351,38 +399,72 @@ export default function ReviewModal({
                     required
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-xl border border-ink/20 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
+                    onKeyDown={handleSingleLineKeyDown}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                    }}
+                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition focus:ring-1 ${
+                      fieldErrors.name
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                        : 'border-ink/20 focus:border-forest-600 focus:ring-forest-600'
+                    }`}
                     placeholder="e.g. Sara Malik"
                   />
+                  {fieldErrors.name && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.name}</p>
+                  )}
                 </div>
 
                 {/* Title */}
                 <div className="mt-4">
                   <label className="mb-1.5 block text-xs font-semibold tracking-wide uppercase text-ink/70">
-                    Review Headline (optional)
+                    Review Headline <span className="text-red-500">*</span>
                   </label>
                   <input
+                    required
                     type="text"
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full rounded-xl border border-ink/20 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
+                    onKeyDown={handleSingleLineKeyDown}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
+                      if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }));
+                    }}
+                    className={`w-full rounded-xl border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition focus:ring-1 ${
+                      fieldErrors.title
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                        : 'border-ink/20 focus:border-forest-600 focus:ring-forest-600'
+                    }`}
                     placeholder="e.g. Noticeable hair regrowth in 4 weeks!"
                   />
+                  {fieldErrors.title && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.title}</p>
+                  )}
                 </div>
 
                 {/* Body */}
                 <div className="mt-4">
                   <label className="mb-1.5 block text-xs font-semibold tracking-wide uppercase text-ink/70">
-                    Your Review
+                    Your Review <span className="text-red-500">*</span>
                   </label>
                   <textarea
+                    required
                     rows={3}
                     value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    className="w-full resize-none rounded-xl border border-ink/20 px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition focus:border-forest-600 focus:ring-1 focus:ring-forest-600"
-                    placeholder="How does your scalp and hair feel? How often did you apply it?"
+                    onChange={(e) => {
+                      setBody(e.target.value);
+                      if (fieldErrors.body) setFieldErrors((prev) => ({ ...prev, body: undefined }));
+                    }}
+                    className={`w-full resize-none rounded-xl border px-3.5 py-2.5 text-sm text-ink placeholder:text-ink/35 outline-none transition focus:ring-1 ${
+                      fieldErrors.body
+                        ? 'border-red-400 focus:border-red-500 focus:ring-red-500'
+                        : 'border-ink/20 focus:border-forest-600 focus:ring-forest-600'
+                    }`}
+                    placeholder="How does your scalp and hair feel? How often did you apply it? (min. 10 characters)"
                   />
+                  {fieldErrors.body && (
+                    <p className="mt-1 text-xs text-red-600">{fieldErrors.body}</p>
+                  )}
                 </div>
 
                 {/* Photo Upload Attachment */}
@@ -462,6 +544,8 @@ export default function ReviewModal({
                           <img
                             src={imgSrc}
                             alt={`Preview ${idx + 1}`}
+                            width={80}
+                            height={80}
                             className="h-full w-full object-cover"
                           />
                           {/* Remove button */}

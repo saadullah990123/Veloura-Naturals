@@ -54,7 +54,7 @@ export const trackOrderSchema = z.object({
 // Products
 // ---------------------------------------------------------------------------
 export const productSchema = z.object({
-  name: z.string().trim().min(2).max(200),
+  name: z.string().trim().min(2, 'Product name must be at least 2 characters').max(200),
   slug: z
     .string()
     .trim()
@@ -67,7 +67,7 @@ export const productSchema = z.object({
   shortDescription: z.string().trim().max(300).optional().or(z.literal('')),
   description: z.string().trim().max(5000).optional().or(z.literal('')),
   details: z.string().trim().max(10000).optional().or(z.literal('')),
-  images: z.array(z.string().url()).max(12).default([]),
+  images: z.array(z.string().trim().min(1, 'Image path or URL is required')).max(12).default([]),
   stock: z.coerce.number().int().min(0),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(true),
@@ -95,10 +95,10 @@ export const categorySchema = z.object({
 // ---------------------------------------------------------------------------
 export const createReviewSchema = z.object({
   productId: z.coerce.number().int().positive().optional(),
-  customerName: z.string().trim().min(2).max(150),
-  rating: z.coerce.number().int().min(1).max(5),
-  title: z.string().trim().max(150).optional().or(z.literal('')),
-  body: z.string().trim().max(2000).optional().or(z.literal('')),
+  customerName: z.string().trim().min(2, 'Your name must be at least 2 characters').max(150, 'Name cannot exceed 150 characters'),
+  rating: z.coerce.number().int().min(1, 'Overall rating must be between 1 and 5 stars').max(5, 'Overall rating must be between 1 and 5 stars'),
+  title: z.string().trim().min(3, 'Review headline must be at least 3 characters').max(150, 'Review headline cannot exceed 150 characters'),
+  body: z.string().trim().min(10, 'Your review must be at least 10 characters').max(2000, 'Your review cannot exceed 2000 characters'),
 });
 
 export const updateReviewStatusSchema = z.object({

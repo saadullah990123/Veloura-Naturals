@@ -110,6 +110,8 @@ export default function ReviewLightbox({
           <img
             src={images[index]}
             alt={reviewTitle ? `${reviewTitle} - Photo ${index + 1}` : `Customer review photo ${index + 1}`}
+            width={1200}
+            height={800}
             className="max-h-[75vh] w-auto max-w-full rounded-lg object-contain shadow-2xl transition-all duration-300 select-none"
           />
 
@@ -186,6 +188,8 @@ export default function ReviewLightbox({
                 <img
                   src={img}
                   alt={`Thumbnail ${i + 1}`}
+                  width={56}
+                  height={56}
                   className="h-full w-full object-cover"
                 />
               </button>

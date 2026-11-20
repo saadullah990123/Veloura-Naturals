@@ -28,8 +28,8 @@ export async function GET(req: Request) {
 
   const results = await findOrdersByTrack(parsed.data.orderNumber, parsed.data.phone);
 
-  // Only return the fields a customer needs — never expose full address,
-  // payment proof URLs, or admin notes through the public tracking endpoint.
+  // Security & Privacy: Only return customer-facing public fields.
+  // INTERNAL adminNotes must NEVER be exposed in this response.
   const sanitized = results.map((o) => ({
     orderNumber: o.orderNumber,
     status: o.status,

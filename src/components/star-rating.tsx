@@ -10,7 +10,11 @@ export default function StarRating({
   className?: string;
 }) {
   return (
-    <div className={cn('flex items-center gap-0.5', className)} aria-label={`${rating} out of 5 stars`}>
+    <div
+      role="img"
+      className={cn('flex items-center gap-0.5', className)}
+      aria-label={`${rating} out of 5 stars`}
+    >
       {[1, 2, 3, 4, 5].map((star) => {
         const filled = star <= Math.round(rating);
         return (

@@ -10,27 +10,69 @@ import { products, reviews, settings, orders } from './db/schema';
 // data between different users/requests, so it can't ever serve stale data
 // across requests.
 
+export const DEFAULT_PRODUCT = {
+  id: 1,
+  name: 'Veloura Naturals Hair Oil',
+  slug: 'veloura-naturals-hair-oil',
+  categoryId: 1,
+  price: '1999',
+  compareAtPrice: '2999',
+  shortDescription:
+    'Anti-hair fall. Strengthens roots. Intense hair nourishment — with olive, almond, mustard, rosemary, amla, black seed, four seed, coconut and pumpkin oils plus Vitamin E.',
+  description:
+    'Veloura Naturals Hair Oil is a 100% organic, 9-oil blend crafted to stop hair fall, strengthen roots from within, and restore natural shine and volume. Massage into the scalp, leave active for 2–3 hours, then wash — with consistent use, most customers notice visibly stronger, thicker hair within a few weeks.',
+  details:
+    'Ingredients: Olive Oil, Almond Oil, Mustard Oil, Rosemary Oil, Amla Oil, Black Seed Oil, Four Seed Oil, Coconut Oil, Pumpkin Oil, Vitamin E.\n\nDirections: Take a few drops in hands and massage deeply into roots and scalp. Distribute evenly to hair ends. Leave active for 2–3 hours prior to washing.\n\nNet volume: 125ml.',
+  images: ['/images/image-1.jpg', '/images/image-2.jpg', '/images/image-3.png'],
+  stock: 250,
+  isActive: true,
+  isFeatured: true,
+  isBestseller: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 export const getActiveProduct = cache(async () => {
   try {
     const rows = await db
       .select()
       .from(products)
       .where(eq(products.isActive, true))
+      .orderBy(desc(products.isFeatured), desc(products.updatedAt), desc(products.createdAt))
       .limit(1);
-    return rows[0] ?? null;
+    return rows[0] ?? DEFAULT_PRODUCT;
   } catch (err) {
     console.error('getActiveProduct failed:', err);
-    return null;
+    return DEFAULT_PRODUCT;
   }
 });
 
 export async function getProductBySlug(slug: string) {
-  const rows = await db
-    .select()
-    .from(products)
-    .where(eq(products.slug, slug))
-    .limit(1);
-  return rows[0] ?? null;
+  try {
+    const rows = await db
+      .select()
+      .from(products)
+      .where(eq(products.slug, slug))
+      .limit(1);
+    return rows[0] ?? DEFAULT_PRODUCT;
+  } catch (err) {
+    console.error('getProductBySlug failed:', err);
+    return DEFAULT_PRODUCT;
+  }
+}
+
+export async function getProductById(id: number) {
+  try {
+    const rows = await db
+      .select()
+      .from(products)
+      .where(eq(products.id, id))
+      .limit(1);
+    return rows[0] ?? DEFAULT_PRODUCT;
+  } catch (err) {
+    console.error('getProductById failed:', err);
+    return DEFAULT_PRODUCT;
+  }
 }
 
 export const getApprovedReviews = cache(async (limit = 20) => {
@@ -47,10 +89,6 @@ export const getApprovedReviews = cache(async (limit = 20) => {
   }
 });
 
-// A single SQL aggregate instead of pulling up to 1000 full review rows into
-// application memory just to count them and average one column in JS — the
-// database is far better at this than Node is, and it's one small round
-// trip instead of a large one.
 export const getReviewStats = cache(async () => {
   try {
     const [row] = await db
@@ -93,9 +131,6 @@ const DEFAULT_SETTINGS = {
 export const getSettings = cache(async () => {
   try {
     const rows = await db.select().from(settings).limit(1);
-    // Sensible fallback so pages render before the DB is seeded, or if a
-    // query briefly fails — a missing settings row should never take the
-    // whole storefront down.
     return rows[0] ?? DEFAULT_SETTINGS;
   } catch (err) {
     console.error('getSettings failed:', err);

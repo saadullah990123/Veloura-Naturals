@@ -64,7 +64,7 @@ async function main() {
         'Veloura Naturals Hair Oil is a 100% organic, 9-oil blend crafted to stop hair fall, strengthen roots from within, and restore natural shine and volume. Massage into the scalp, leave active for 2–3 hours, then wash — with consistent use, most customers notice visibly stronger, thicker hair within a few weeks.',
       details:
         'Ingredients: Olive Oil, Almond Oil, Mustard Oil, Rosemary Oil, Amla Oil, Black Seed Oil, Four Seed Oil, Coconut Oil, Pumpkin Oil, Vitamin E.\n\nDirections: Take a few drops in hands and massage deeply into roots and scalp. Distribute evenly to hair ends. Leave active for 2–3 hours prior to washing.\n\nNet volume: 125ml.',
-      images: ['/images/product-placeholder-1.png', '/images/product-placeholder-2.png'],
+      images: ['/images/image-1.jpg', '/images/image-2.jpg', '/images/image-3.png'],
       stock: 250,
       isActive: true,
       isFeatured: true,

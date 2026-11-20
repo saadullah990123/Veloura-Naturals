@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import TrackOrderForm from '@/components/track-order-form';
 
 export const metadata: Metadata = {
@@ -21,7 +22,9 @@ export default function TrackOrderPage() {
       </div>
 
       <div className="mx-auto mt-10 max-w-2xl">
-        <TrackOrderForm />
+        <Suspense fallback={<div className="p-8 text-center text-ink/40">Loading tracking…</div>}>
+          <TrackOrderForm />
+        </Suspense>
       </div>
     </div>
   );

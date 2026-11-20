@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { formatPKR } from '@/lib/utils';
 
 interface Props {
@@ -33,6 +34,7 @@ export default function OrderForm({
   const [status, setStatus] = useState<'idle' | 'submitting' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const [orderNumber, setOrderNumber] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const subtotal = unitPrice * quantity;
   const effectiveDeliveryFee =
@@ -40,6 +42,17 @@ export default function OrderForm({
   const total = subtotal + effectiveDeliveryFee;
   // Note: this is a live preview only — the server independently recalculates
   // the real total from the database price at order-creation time.
+
+  async function handleCopy() {
+    if (!orderNumber) return;
+    try {
+      await navigator.clipboard.writeText(orderNumber);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      console.warn('Clipboard write failed:', err);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -89,23 +102,72 @@ export default function OrderForm({
 
   if (status === 'done') {
     return (
-      <div className="rounded-2xl border border-forest-200 bg-forest-50 p-8 text-center">
-        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-forest-600 text-white">
-          ✓
+      <div className="rounded-2xl border border-forest-200 bg-forest-50 p-6 text-center sm:p-8">
+        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-forest-600 text-white shadow-md">
+          <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
         </div>
-        <h3 className="font-display text-xl font-semibold text-ink">
-          Order placed!
+        <h3 className="font-display text-2xl font-bold text-ink">
+          Order Placed Successfully!
         </h3>
-        <p className="mt-2 text-ink/70">
-          Your order number is{' '}
-          <span className="font-mono font-semibold text-forest-700">
+        <p className="mt-2 text-sm font-medium text-forest-800">
+          Thank you! Please save this Order ID to track your order status.
+        </p>
+
+        {/* 1-Click Copy Order ID box */}
+        <div className="my-5 inline-flex max-w-full flex-wrap items-center justify-center gap-3 rounded-xl border border-forest-300 bg-white px-4 py-2.5 shadow-sm">
+          <span className="font-mono text-lg font-bold tracking-wider text-forest-700">
             {orderNumber}
           </span>
-          . Save it to track your order.
+          <button
+            type="button"
+            onClick={handleCopy}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition active:scale-95 ${
+              copied
+                ? 'bg-forest-700 text-white shadow-inner'
+                : 'bg-forest-600 text-white hover:bg-forest-700 shadow-sm'
+            }`}
+            aria-label={copied ? 'Order ID Copied' : 'Copy Order ID to clipboard'}
+          >
+            {copied ? (
+              <>
+                <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Copied!</span>
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                  />
+                </svg>
+                <span>Copy</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <p className="mt-1 text-xs text-ink/60">
+          We'll contact you shortly to confirm your delivery details.
         </p>
-        <p className="mt-1 text-sm text-ink/50">
-          We'll contact you shortly to confirm delivery details.
-        </p>
+
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link
+            href={`/track-order?orderNumber=${encodeURIComponent(orderNumber)}`}
+            className="btn-primary text-xs sm:text-sm"
+          >
+            Track Order Status
+          </Link>
+          <Link href="/" className="btn-outline text-xs sm:text-sm">
+            Continue Shopping
+          </Link>
+        </div>
       </div>
     );
   }

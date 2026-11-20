@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { desc } from 'drizzle-orm';
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { products } from '@/lib/db/schema';
 import { productSchema } from '@/lib/validation/schemas';
@@ -35,6 +36,11 @@ export async function POST(req: Request) {
         parsed.data.compareAtPrice != null ? String(parsed.data.compareAtPrice) : null,
     })
     .returning();
+
+  // Purge storefront caches so new product updates appear immediately
+  revalidatePath('/');
+  revalidatePath('/product');
+  revalidatePath('/admin/products');
 
   return NextResponse.json({ product: created }, { status: 201 });
 }

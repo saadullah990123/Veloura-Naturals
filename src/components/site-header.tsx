@@ -12,17 +12,17 @@ const NAV_LINKS = [
 export default function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-forest-900/10 bg-white/90 backdrop-blur">
-      <div className="container-x flex h-20 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 sm:gap-2.5">
+      <div className="container-x flex h-20 items-center justify-between gap-2">
+        <Link href="/" className="flex min-w-0 shrink items-center gap-2 sm:gap-2.5">
           <Image
             src="/images/logo-fleur.png"
             alt="Veloura Naturals"
             width={34}
             height={41}
-            className="h-8 w-auto sm:h-9"
+            className="h-8 w-auto shrink-0 sm:h-9"
             priority
           />
-          <span className="font-display text-base font-semibold tracking-wide text-forest-800 sm:text-xl">
+          <span className="truncate font-display text-sm font-semibold tracking-wide text-forest-800 sm:text-xl">
             VELOURA <span className="text-gold-600">NATURALS</span>
           </span>
         </Link>
@@ -39,11 +39,16 @@ export default function SiteHeader() {
           ))}
         </nav>
 
-        <Link href="/product" className="btn-primary hidden md:inline-flex">
-          Shop Now
-        </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/product"
+            className="btn-primary whitespace-nowrap px-3 py-1.5 text-xs sm:px-5 sm:py-2.5 sm:text-sm"
+          >
+            Shop Now
+          </Link>
 
-        <MobileNav />
+          <MobileNav />
+        </div>
       </div>
     </header>
   );

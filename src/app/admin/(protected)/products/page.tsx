@@ -33,7 +33,7 @@ function toFormData(p: Product): ProductFormData {
     shortDescription: p.shortDescription || '',
     description: p.description || '',
     details: p.details || '',
-    images: p.images.join('\n'),
+    images: Array.isArray(p.images) ? [...p.images] : [],
     isActive: p.isActive,
     isFeatured: p.isFeatured,
     isBestseller: p.isBestseller,
@@ -79,9 +79,9 @@ export default function AdminProductsPage() {
 
   function handleSaved() {
     setModalOpen(false);
-    setMessage(editing ? 'Product updated.' : 'Product added.');
+    setMessage(editing ? 'Product updated successfully.' : 'Product added successfully.');
     load();
-    setTimeout(() => setMessage(''), 3000);
+    setTimeout(() => setMessage(''), 3500);
   }
 
   async function handleDelete(p: Product) {
@@ -127,7 +127,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">Products</h1>
           <p className="mt-1 text-sm text-ink/50">
-            Add, edit, or remove items — price and stock update instantly on the storefront.
+            Add, edit, or manage products, prices, images, and descriptions — instantly updated across the storefront.
           </p>
         </div>
         <button onClick={openAddModal} className="btn-primary">
@@ -157,21 +157,45 @@ export default function AdminProductsPage() {
         {products.map((p) => (
           <div key={p.id} className="admin-card p-4">
             <div className="flex gap-3">
-              <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-forest-50">
-                {p.images[0] && (
-                  <Image src={p.images[0]} alt={p.name} width={64} height={64} className="h-full w-full object-cover" />
+              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-forest-50">
+                {p.images && p.images[0] ? (
+                  <Image
+                    src={p.images[0]}
+                    alt={p.name}
+                    width={64}
+                    height={64}
+                    className="h-full w-full object-cover"
+                    unoptimized={p.images[0].startsWith('data:')}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-xs text-ink/30">No img</div>
                 )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold text-ink">{p.name}</p>
-                <p className="text-sm text-ink/50">{formatPKR(p.price)} · Stock: {p.stock}</p>
-                <span
-                  className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                    p.isActive ? 'bg-forest-100 text-forest-700' : 'bg-ink/10 text-ink/50'
-                  }`}
-                >
-                  {p.isActive ? 'Active' : 'Hidden'}
-                </span>
+                <p className="text-sm text-ink/50">
+                  {formatPKR(p.price)}
+                  {p.compareAtPrice && (
+                    <span className="ml-1.5 text-xs text-ink/35 line-through">
+                      {formatPKR(p.compareAtPrice)}
+                    </span>
+                  )}{' '}
+                  · Stock: {p.stock}
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span
+                    className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                      p.isActive ? 'bg-forest-100 text-forest-700' : 'bg-ink/10 text-ink/50'
+                    }`}
+                  >
+                    {p.isActive ? 'Active' : 'Hidden'}
+                  </span>
+                  {p.images && p.images.length > 0 && (
+                    <span className="text-[11px] text-ink/40">
+                      {p.images.length} {p.images.length === 1 ? 'image' : 'images'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="mt-3 flex gap-2">
@@ -212,14 +236,25 @@ export default function AdminProductsPage() {
               <tr key={p.id} className="border-b border-ink/5">
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-forest-50">
-                      {p.images[0] && (
-                        <Image src={p.images[0]} alt={p.name} width={48} height={48} className="h-full w-full object-cover" />
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-forest-50">
+                      {p.images && p.images[0] ? (
+                        <Image
+                          src={p.images[0]}
+                          alt={p.name}
+                          width={48}
+                          height={48}
+                          className="h-full w-full object-cover"
+                          unoptimized={p.images[0].startsWith('data:')}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs text-ink/30">No img</div>
                       )}
                     </div>
                     <div className="min-w-0">
                       <p className="truncate font-medium text-ink">{p.name}</p>
-                      <p className="truncate text-xs text-ink/40">/{p.slug}</p>
+                      <p className="truncate text-xs text-ink/40">
+                        /{p.slug} · {p.images ? p.images.length : 0} {p.images?.length === 1 ? 'image' : 'images'}
+                      </p>
                     </div>
                   </div>
                 </td>
@@ -232,6 +267,11 @@ export default function AdminProductsPage() {
                       onBlur={(e) => quickUpdatePrice(p, e.target.value)}
                       className="w-24 rounded-md border border-ink/15 px-2 py-1 text-sm outline-none focus:border-forest-500"
                     />
+                    {p.compareAtPrice && (
+                      <span className="text-xs text-ink/35 line-through">
+                        {formatPKR(p.compareAtPrice)}
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td className="px-5 py-4">
