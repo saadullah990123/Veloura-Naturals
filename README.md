@@ -246,6 +246,7 @@ Veloura Naturals is deployed on **Vercel**.
 | Storefront | Product & Checkout |
 |:-:|:-:|
 | <img width="1917" height="962" alt="image" src="https://github.com/user-attachments/assets/ef79bef0-412d-4cd7-9161-9a3034dddc76" />
+
  | <img width="2048" height="3582" alt="veloura-naturals vercel app_product" src="https://github.com/user-attachments/assets/10b06493-b32e-481d-94af-ddc8968d153c" />
 
  |
@@ -254,7 +255,9 @@ Veloura Naturals is deployed on **Vercel**.
 |:-:|:-:|
 | <img width="2048" height="2636" alt="veloura-naturals vercel app_admin_orders" src="https://github.com/user-attachments/assets/0cf18fe5-251e-415b-a419-1824169f613a" />
 
- | <img src="docs/screenshots/admin-reviews.png" alt="Admin review moderation" /> |
+
+ | <img width="1917" height="967" alt="image" src="https://github.com/user-attachments/assets/7017aaf0-be52-47aa-8bcc-8f7e4df78ff7" />
+ |
 
 ---
 
