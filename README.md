@@ -252,7 +252,8 @@ Veloura Naturals is deployed on **Vercel**.
 
 | Orders & Payments | Review Moderation |
 |:-:|:-:|
-| <img width="1917" height="967" alt="image" src="https://github.com/user-attachments/assets/72406bf9-ad00-4b71-9629-2bc3ca25483a" />
+| <img width="2048" height="2636" alt="veloura-naturals vercel app_admin_orders" src="https://github.com/user-attachments/assets/0cf18fe5-251e-415b-a419-1824169f613a" />
+
  | <img src="docs/screenshots/admin-reviews.png" alt="Admin review moderation" /> |
 
 ---
